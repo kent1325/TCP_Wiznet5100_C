@@ -8,8 +8,3 @@ extern int uart_putch(char ch,FILE *stream);
 extern int uart_getch(FILE *stream);
 
 FILE uart_str = FDEV_SETUP_STREAM(uart_putch, uart_getch, _FDEV_SETUP_RW);
-
-
-
-
-

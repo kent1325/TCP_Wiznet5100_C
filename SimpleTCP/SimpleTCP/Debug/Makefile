@@ -37,6 +37,7 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../adc.c \
 ../main.c \
 ../spi.c \
 ../uart.c \
@@ -50,24 +51,28 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+adc.o \
 main.o \
 spi.o \
 uart.o \
 Wiznet5100.o
 
 OBJS_AS_ARGS +=  \
+adc.o \
 main.o \
 spi.o \
 uart.o \
 Wiznet5100.o
 
 C_DEPS +=  \
+adc.d \
 main.d \
 spi.d \
 uart.d \
 Wiznet5100.d
 
 C_DEPS_AS_ARGS +=  \
+adc.d \
 main.d \
 spi.d \
 uart.d \
@@ -87,6 +92,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

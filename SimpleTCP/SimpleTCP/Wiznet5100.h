@@ -16,7 +16,7 @@ extern uint8_t openSocket(uint8_t eth_protocol, uint16_t tcp_port);
 extern uint8_t listen(void);
 extern void disconnect(void);
 extern uint8_t close(void);
-extern uint16_t getDataAvailable(void);
+extern uint16_t getAvailableData(void);
 
 // Wiznet W5100 Op Code
 #define WIZNET_WRITE_OPCODE 0xF0

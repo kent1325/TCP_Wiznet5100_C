@@ -1,5 +1,6 @@
 #include "Wiznet5100.h"
 #include "nic_settings.h"
+#include "spi.h"
 
 uint8_t getSocketState(void)
 {
@@ -9,7 +10,7 @@ uint8_t getSocketState(void)
 	return state;
 }
 
-uint16_t getDataAvailable(void)
+uint16_t getAvailableData(void)
 {
    uint16_t dataSize = 0;
 	
@@ -161,7 +162,7 @@ uint16_t recieve(uint8_t *buf, uint16_t bufLen)
 {
 	uint16_t offAddr, realAddr;
 
-	// hvis angive længde er større end den angiven intern array længde in MCU
+	// hvis angive længde er større end den angiven intern array længde i MCU'en
 	// afkorter vi den! – ikke ret pænt...
 	if (bufLen > MAX_BUF)
 	{

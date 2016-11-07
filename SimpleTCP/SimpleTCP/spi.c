@@ -11,7 +11,7 @@ void spiInit(void)
 {
 	// MOSI SS and CLK pins set to output (PORTB4, MISO is default 0 = input)
 	SPI_DDR = (1<<PORTB3)|(1<<PORTB5)|(1<<PORTB2);  
-	// CS pin - low = active 
+	// CS pin - high = deactivated
 	SPI_PORT |= (1<<SPI_CS);  
 	// Enable SPI, Master Mode 0, set clock rate to fck/2
 	SPCR = (1<<SPE)|(1<<MSTR);

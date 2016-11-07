@@ -1,9 +1,8 @@
 #include <avr/io.h>
 #include <stdio.h>
 
-#define BAUD_RATE 4800// Seriel hastighed
+#define BAUD_RATE 4800	// Seriel hastighed
 #define F_CPU 16000000UL
-
 
 void uart_flush(void)
 {
