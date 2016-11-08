@@ -5,15 +5,17 @@
 * Author : Kent Vugs Nielsen
 */
 
+#define F_CPU 25000000UL
+
 // Includes
 #include <avr/io.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 #include <string.h>
 //#include <stdlib.h>
 #include "uart.h"
 #include "spi.h"
 #include "Wiznet5100.h"
-//#include "adc.h"
+#include "adc.h"
 
 //Declaration
 uint8_t strCmp(char *source, char *cmpStr);
@@ -31,7 +33,7 @@ int main(void)
 	uart_init();
 	stdout = &uart_str;
 	
-	//adc_init();
+	InitADC();
 
 	_delay_ms(1000);
 
@@ -43,18 +45,27 @@ int main(void)
 	printf("Initializing done!\n");
 
 	// Main local variables
-	DDRD = 0xEC; // Sets PORTD7, 6, 5, 3, 2 as output - digital
+
+	// Setting ports and pins as output
+	/*DDRD = 0xEC; // Sets PORTD7, 6, 5, 3, 2 as output - digital
 	//DDRB = 0x03; // Sets PORTB8 and 9 as output - digital
 	DDRC = 0xFF; // Sets all PORTC as output - analog
 
 	PORTD = 0xEC;
 	//PORTB = 0x03;
 	PORTC = 0xFF;
-	//double temp, calc;
+	*/
 
+	// For data packages
 	uint8_t socketState = 0;
 	uint8_t recDataSize = 0;
 	uint8_t dataSize = 0;
+
+	// For temperature sensor
+	uint16_t adc_result;
+	float temp;
+	char ASCII = 248;
+	int conv = ASCII;
 
 	while (1)
 	{
@@ -87,17 +98,27 @@ int main(void)
 			if (UCSR0A & (1<<RXC0))
 			{
 				// Get temperature and water level data from sink
-				//temperature = uart_getch(NULL);
-				//waterLevel = uart_getch(NULL);
-				printf("I'm in, brouhaha!\r\n");
 
-				//temp = read_adc(0);
-				//calc = (temp * 5 * 100) / 1024;
-				//printf("%d\n", calc);
+				// Read Analog value from A0
+				adc_result = ReadADC(0);
+				
+				// Convert to a Celsius value
+				temp = (5.0 * (float)adc_result * 100.0) / 1024.0;
 
-				send("You are in my system!\r\n", 23);
-				//send(temperature, sizeof(int));
-				//send(waterLevel, sizeof(int));
+				// Variables
+				/*char count[100];
+				int c = 0;
+				int i = 0;
+				count[c++] = temp;
+				
+				while (i < count)
+				{
+					i++;
+				}
+					send(count, i);*/
+
+				// Printing out the temperature
+				printf("Temperature = %.2f%cC\n", temp, conv);
 			}
 
 			// Process the data

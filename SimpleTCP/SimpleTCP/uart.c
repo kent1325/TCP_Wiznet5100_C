@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #define BAUD_RATE 4800	// Seriel hastighed
-#define F_CPU 16000000UL
+#define F_CPU 25000000UL
 
 void uart_flush(void)
 {
@@ -12,8 +12,8 @@ void uart_flush(void)
 
 void uart_init(void)
 {
-  UBRR0H = (((F_CPU/BAUD_RATE)/16)-1)>>8;	// set baud rate
-  UBRR0L = (((F_CPU/BAUD_RATE)/16)-1);
+  UBRR0H = (((F_CPU/BAUD_RATE)/25)-1)>>8;	// set baud rate
+  UBRR0L = (((F_CPU/BAUD_RATE)/25)-1);
   UCSR0B = (1<<RXEN0)|(1<<TXEN0); 		// enable Rx & Tx
   UCSR0C=  (1<<UCSZ01)|(1<<UCSZ00);  	       // config USART; 8N1
   

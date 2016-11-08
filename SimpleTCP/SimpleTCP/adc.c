@@ -4,25 +4,30 @@
  * Created: 03/11/2016 14:54:09
  *  Author: kvn
  */ 
- /*
- #include "adc.h";
 
- void adc_init(void)
- {
-	 ADCSRA = (1<<ADEN) | // AD-enable
-	 (1 << ADPS2) | // Prescale langsomste klok & konvertering
-	 (1 << ADPS1) | // 16MHz/128
-	 (1 << ADPS0);
-	 ADMUX = (1<<REFS1) | (1<<REFS0); // Vælg intern ref. Spænding 1.1v
+ #include <avr/io.h>
 
-	 return;
- }
- uint16_t read_adc(uint8_t adc_input)
- {
-	 ADMUX = adc_input; // Indstil MUX
-	 ADCSRA |= (1<<ADSC); // Start konvertering
-	 while ((ADCSRA & (1<<ADIF))==0); // Vent på komplet konvertering
-	 ADCSRA |= (1<<ADIF); // Clear flag til næste konvertering
-	 return ADCW; // Returner aflæste værdi. 0 - 1023
- }
- */
+void InitADC()
+{
+	ADMUX=(1<<REFS0); // For Aref=AVcc;
+	ADCSRA=(1<<ADEN)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0); //Rescale div factor = 128
+}
+
+uint16_t ReadADC(uint8_t ch)
+{
+	// Select ADC Channel ch must be 0-7
+	ch=ch&0x07;
+	ADMUX|=ch;
+
+	// Start Single conversion
+	ADCSRA|=(1<<ADSC);
+
+	// Wait for conversion to complete
+	while(!(ADCSRA & (1<<ADIF)));
+
+	// Clear ADIF by writing one to it
+	ADCSRA|=(1<<ADIF);
+
+	// Returning the adc
+	return(ADC);
+}
