@@ -5,27 +5,25 @@
 * Author : Kent Vugs Nielsen
 */
 
-#define F_CPU 25000000UL
+// Defines
+#define F_CPU 25000000UL // needed here because off util/delay.h
 
 // Includes
 #include <avr/io.h>
 #include <util/delay.h>
-#include <string.h>
-//#include <stdlib.h>
+#include <stdbool.h>
 #include "uart.h"
 #include "spi.h"
 #include "Wiznet5100.h"
 #include "adc.h"
 
-//Declaration
+// Function Declaration
 uint8_t strCmp(char *source, char *cmpStr);
 
 // Global Variables
 uint8_t buffer[MAX_BUF];
-int preDefTemp = 55;
-int temperature = 55;
-int preDefWaterLvl = 10;
-int waterLevel = 10;
+bool welcomeSend = false;
+char enterSend = '\n';
 
 int main(void)
 {
@@ -33,6 +31,7 @@ int main(void)
 	uart_init();
 	stdout = &uart_str;
 	
+	// Initializing Analog to digital conversion
 	InitADC();
 
 	_delay_ms(1000);
@@ -46,16 +45,6 @@ int main(void)
 
 	// Main local variables
 
-	// Setting ports and pins as output
-	/*DDRD = 0xEC; // Sets PORTD7, 6, 5, 3, 2 as output - digital
-	//DDRB = 0x03; // Sets PORTB8 and 9 as output - digital
-	DDRC = 0xFF; // Sets all PORTC as output - analog
-
-	PORTD = 0xEC;
-	//PORTB = 0x03;
-	PORTC = 0xFF;
-	*/
-
 	// For data packages
 	uint8_t socketState = 0;
 	uint8_t recDataSize = 0;
@@ -64,8 +53,11 @@ int main(void)
 	// For temperature sensor
 	uint16_t adc_result;
 	int temp;
-	char ASCII = 248;
-	int conv = ASCII;
+
+	// Setting ports and pins as output
+	DDRC = 0x00; // Sets all Analog pins to 0 = Input
+	DDRD = 0xE0; // Sets PD 5-7 as 1 = Output
+	DDRB = 0x2F; // Sets PB 0-1 as 1 = Output
 
 	while (1)
 	{
@@ -94,11 +86,9 @@ int main(void)
 			// Get the size of the received data
 			recDataSize = getAvailableData();
 
-			// if data status is approved
+			// if data status is approved - Get temperature and water level data from sink
 			if (UCSR0A & (1<<RXC0))
 			{
-				// Get temperature and water level data from sink
-
 				// Read Analog value from A0
 				adc_result = ReadADC(0);
 				
@@ -112,12 +102,11 @@ int main(void)
 				// Saving the string to strBuffer and saving return value which is length of strBuffer in retval
 				retval = sprintf(strBuffer, "Temperature = %d\r\n", temp);
 
-				// Printing out the temperature
-				printf("Temperature = %d%cC\n", temp, conv);
+				// Sending the temperature package
 				send(strBuffer, retval);
 			}
 
-			// Process the data
+			// Process the recieved data
 			if (recDataSize > 0) // If there is data
 			{
 				// Make sure there is data to process
@@ -137,11 +126,12 @@ int main(void)
 				if (buffer[dataSize -1] == '\n')
 				{
 					// If received input is equal to <ENTER> send a welcome
-					if (buffer[dataSize -1] == '\n' || buffer[dataSize -1] == '\r')
+					if ((buffer[dataSize -1] == '\n' || buffer[dataSize -1] == '\r') && welcomeSend == false)
 					{
 						// Sending welcome
-						send("Welcome!\r\nYou are connected to me, Arduino and wish to do something.\r\nYour wish is my command, sir!\r\n", 101);
+						send("Welcome!\r\nYou are connected to me, Arduino!\r\nYou wish to do something.\r\nYour wish is my command, sir!\r\nPress \"help\" to get the command list.\r\n", 142);
 						printf("Welcome is send!\n");
+						welcomeSend = true;
 					}
 
 					// If received input equals to quit or exit. send disconnect
@@ -153,19 +143,29 @@ int main(void)
 						disconnect();
 					}
 
+					// If revieved input equals to help. send command list
+					else if (strCmp(buffer, "help") !=0)
+					{
+						// Sending command list
+						send("**********COMMAND LIST**********\r\n"
+							"1) start \\\\Starts the system\r\n"
+							"2) stop \\\\Stops the system\r\n"
+							"3) quit \\\\Exits the system\r\n"
+							"********************************\r\n", 154);
+						printf("Command list is send!\n");
+					}
+
 					// Else if start is received open ports!
 					else if (strCmp(buffer, "start") != 0)
 					{
 						// Turn of the system
+						PORTD |= (1<<PORTD5); // Sets Digital pin 5 PD5 = 1 = 5V
+						PORTD |= (1<<PORTD6); // Sets Digital pin 6 PD6 = 1 = 5V
+						PORTD |= (1<<PORTD7); // Sets Digital pin 7 PD7 = 1 = 5V
 
-						/*DDRD = 0xEC; // Sets PORTD7, 6, 5, 3, 2 as output - digital
-						//DDRB = 0x03; // Sets PORTB8 and 9 as output - digital
-						DDRC = 0xFF; // Sets all PORTC as output - analog
-
-						PORTD = 0xEC;
-						//PORTB = 0x03;
-						PORTC = 0xFF;*/
-
+						PORTB |= (1<<PORTB0); // Sets Digital pin 8 PB0 = 1 = 5V
+						PORTB |= (1<<PORTB1); // Sets Digital pin 9 PB1 = 1 = 5V
+						
 						send("Turned the system ON!\r\n", 23);
 						printf("Start is send!\n");
 					}
@@ -174,10 +174,12 @@ int main(void)
 					else if (strCmp(buffer, "stop") != 0)
 					{
 						// Turn of the system
+						PORTD &= ~(1<<PORTD5); // Sets Digital pin 5 PD5 = 0 = 0V
+						PORTD &= ~(1<<PORTD6); // Sets Digital pin 6 PD6 = 0 = 0V
+						PORTD &= ~(1<<PORTD7); // Sets Digital pin 7 PD7 = 0 = 0V
 
-						//PORTC = ~PORTC;
-						//PORTD = ~PORTD;
-						//PORTB = ~PORTB; 
+						PORTB &= ~(1<<PORTB0); // Sets Digital pin 8 PB0 = 0 = 0V
+						PORTB &= ~(1<<PORTB1); // Sets Digital pin 9 PB1 = 0 = 0V
 
 						send("Turned the system OFF!\r\n", 24);
 						printf("Stop is send!\n");
@@ -224,6 +226,7 @@ int main(void)
 	return 0;
 }
 
+// Making of own string compare function
 uint8_t strCmp(char *source, char *cmpStr)
 {
 	for(int i = 0; cmpStr[i] != '\0'; i++)
@@ -232,16 +235,4 @@ uint8_t strCmp(char *source, char *cmpStr)
 		return 0;
 	}
 	return 1;
-}
-
-char * toArray(int number)
-{
-	int n = log10(number) + 1;
-	int i;
-	char *numberArray = calloc(n, sizeof(char));
-	for ( i = 0; i < n; ++i, number /= 10 )
-	{
-		numberArray[i] = number % 10;
-	}
-	return numberArray;
 }
