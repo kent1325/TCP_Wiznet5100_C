@@ -63,7 +63,7 @@ int main(void)
 
 	// For temperature sensor
 	uint16_t adc_result;
-	float temp;
+	int temp;
 	char ASCII = 248;
 	int conv = ASCII;
 
@@ -103,22 +103,18 @@ int main(void)
 				adc_result = ReadADC(0);
 				
 				// Convert to a Celsius value
-				temp = (5.0 * (float)adc_result * 100.0) / 1024.0;
+				temp = (5 * adc_result * 100) / 1024;
 
-				// Variables
-				/*char count[100];
-				int c = 0;
-				int i = 0;
-				count[c++] = temp;
-				
-				while (i < count)
-				{
-					i++;
-				}
-					send(count, i);*/
+				// Local variables to send temperature
+				int retval;
+				char strBuffer[100];
+
+				// Saving the string to strBuffer and saving return value which is length of strBuffer in retval
+				retval = sprintf(strBuffer, "Temperature = %d\r\n", temp);
 
 				// Printing out the temperature
-				printf("Temperature = %.2f%cC\n", temp, conv);
+				printf("Temperature = %d%cC\n", temp, conv);
+				send(strBuffer, retval);
 			}
 
 			// Process the data
@@ -140,11 +136,8 @@ int main(void)
 				// Send the buffer and received data size
 				if (buffer[dataSize -1] == '\n')
 				{
-
-					dataSize = 0;
-
 					// If received input is equal to <ENTER> send a welcome
-					if (buffer[0] == '\n' || buffer[0] == '\r')
+					if (buffer[dataSize -1] == '\n' || buffer[dataSize -1] == '\r')
 					{
 						// Sending welcome
 						send("Welcome!\r\nYou are connected to me, Arduino and wish to do something.\r\nYour wish is my command, sir!\r\n", 101);
@@ -239,4 +232,16 @@ uint8_t strCmp(char *source, char *cmpStr)
 		return 0;
 	}
 	return 1;
+}
+
+char * toArray(int number)
+{
+	int n = log10(number) + 1;
+	int i;
+	char *numberArray = calloc(n, sizeof(char));
+	for ( i = 0; i < n; ++i, number /= 10 )
+	{
+		numberArray[i] = number % 10;
+	}
+	return numberArray;
 }
